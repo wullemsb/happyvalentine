@@ -5,184 +5,245 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Romantic Movie Poster Generator</title>
     <style>
-        /* Previous styles remain the same */
+        /* Updated romantic theme */
+        :root {
+            --primary-color: #FF6B8B;
+            --primary-hover: #FF4F75;
+            --bg-color: #FFF5F7;
+            --container-bg: #FFFFFF;
+            --config-bg: #FFF0F3;
+            --movie-details-bg: #FFE8EE;
+            --text-color: #4A4A4A;
+            --heading-color: #FF4F75;
+            --border-radius: 16px;
+            --shadow: 0 8px 20px rgba(255, 107, 139, 0.1);
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Playfair Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, serif;
             max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f7f7f7;
+            background-color: var(--bg-color);
+            background-image: linear-gradient(45deg, #FFF5F7 25%, #FFE8EE 25%, #FFE8EE 50%, #FFF5F7 50%, #FFF5F7 75%, #FFE8EE 75%, #FFE8EE 100%);
+            background-size: 56.57px 56.57px;
         }
+
         .container {
-            background-color: white;
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background-color: var(--container-bg);
+            padding: 32px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
         }
+
+        h1, h3 {
+            color: var(--heading-color);
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+            letter-spacing: 0.5px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 1.5em;
+            position: relative;
+        }
+
+        h1::after {
+            content: '♥';
+            display: block;
+            font-size: 0.5em;
+            color: var(--primary-color);
+            margin-top: 10px;
+        }
+
         .config-section {
-            background-color: #fff3cd;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            background-color: var(--config-bg);
+            padding: 24px;
+            border-radius: var(--border-radius);
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 107, 139, 0.2);
         }
+
         .movie-details {
-            background-color: #e6f3ff;
-            padding: 16px;
-            border-radius: 8px;
+            background-color: var(--movie-details-bg);
+            padding: 24px;
+            border-radius: var(--border-radius);
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 107, 139, 0.2);
+        }
+
+        .input-group {
             margin-bottom: 20px;
         }
-        .input-group {
-            margin-bottom: 16px;
-        }
+
         label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: var(--text-color);
+            font-size: 0.95em;
         }
+
         input, textarea {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            border: 2px solid rgba(255, 107, 139, 0.2);
+            border-radius: 10px;
             box-sizing: border-box;
+            transition: border-color 0.3s ease;
+            background-color: white;
         }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(255, 107, 139, 0.1);
+        }
+
         textarea {
-            min-height: 100px;
+            min-height: 120px;
             resize: vertical;
         }
+
         input[type="file"] {
-            padding: 8px;
-            background-color: #f8f9fa;
+            padding: 10px;
+            background-color: white;
+            border: 2px dashed rgba(255, 107, 139, 0.3);
         }
+
         button {
-            background-color: #0066cc;
+            background-color: var(--primary-color);
             color: white;
-            padding: 12px 24px;
+            padding: 14px 28px;
             border: none;
-            border-radius: 6px;
+            border-radius: 30px;
             cursor: pointer;
             font-weight: 600;
-            transition: background-color 0.2s;
+            transition: all 0.3s ease;
             width: 100%;
             max-width: 300px;
             margin: 0 auto;
             display: block;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+
         button:hover {
-            background-color: #0052a3;
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 139, 0.2);
         }
+
         button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
+
         .preview-container {
-            margin-top: 24px;
+            margin-top: 32px;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
+            gap: 32px;
         }
+
         .preview-box {
-            background-color: #f8f9fa;
-            padding: 16px;
-            border-radius: 8px;
+            background-color: white;
+            padding: 24px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 107, 139, 0.1);
         }
+
         .preview-box h3 {
             margin-top: 0;
-            color: #333;
+            color: var(--heading-color);
+            font-size: 1.5em;
         }
+
         img {
             max-width: 100%;
-            border-radius: 8px;
+            border-radius: 12px;
             display: block;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
+
         #loadingText {
             display: none;
-            color: #666;
-            margin-top: 16px;
+            color: var(--primary-color);
+            margin-top: 20px;
             text-align: center;
+            font-style: italic;
         }
+
         .error {
             color: #dc3545;
-            background-color: #f8d7da;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 16px;
+            background-color: #fff5f5;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 20px;
             display: none;
+            border: 1px solid rgba(220, 53, 69, 0.2);
         }
+
         .preview-details {
-            margin-top: 12px;
-            padding: 12px;
-            background-color: white;
-            border-radius: 6px;
+            margin-top: 16px;
+            padding: 16px;
+            background-color: var(--movie-details-bg);
+            border-radius: 12px;
         }
-        .preview-details h4 {
-            margin: 0 0 8px 0;
-            color: #333;
-        }
-        .preview-details p {
-            margin: 0;
-            color: #666;
-            font-size: 0.9em;
-        }
+
         .steps-indicator {
             display: flex;
             justify-content: center;
-            margin: 20px 0;
-            gap: 8px;
+            margin: 24px 0;
+            gap: 12px;
         }
+
         .step {
-            padding: 8px 16px;
-            background: #eee;
-            border-radius: 16px;
+            padding: 10px 20px;
+            background: white;
+            border-radius: 20px;
             font-size: 0.9em;
-            color: #666;
+            color: var(--text-color);
+            border: 1px solid rgba(255, 107, 139, 0.2);
+            transition: all 0.3s ease;
         }
+
         .step.active {
-            background: #0066cc;
+            background: var(--primary-color);
             color: white;
+            border-color: var(--primary-color);
+            transform: scale(1.05);
         }
-        .poster-analysis {
-            background-color: #f0f7ff;
-            padding: 12px;
-            margin: 12px 0;
-            border-radius: 6px;
-            border-left: 4px solid #0066cc;
-            font-size: 0.9em;
-            display: none;
-        }
-        
-        /* Update steps indicator for three steps */
-        .steps-indicator {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-            gap: 8px;
-        }
-        .step {
-            padding: 8px 16px;
-            background: #eee;
-            border-radius: 16px;
-            font-size: 0.9em;
-            color: #666;
-        }
-        .step.active {
-            background: #0066cc;
-            color: white;
-        }
-        
-        /* Add analysis toggle button */
+
         .toggle-analysis {
             background: none;
             border: none;
-            color: #0066cc;
+            color: var(--primary-color);
             text-decoration: underline;
             cursor: pointer;
-            padding: 4px;
+            padding: 8px;
             font-size: 0.9em;
             width: auto;
-            margin: 0;
+            margin: 12px 0;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .poster-analysis {
+            background-color: var(--movie-details-bg);
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary-color);
+            font-size: 0.95em;
+            display: none;
+            line-height: 1.6;
         }
     </style>
 </head>
