@@ -143,6 +143,47 @@
             background: #0066cc;
             color: white;
         }
+        .poster-analysis {
+            background-color: #f0f7ff;
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 6px;
+            border-left: 4px solid #0066cc;
+            font-size: 0.9em;
+            display: none;
+        }
+        
+        /* Update steps indicator for three steps */
+        .steps-indicator {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 8px;
+        }
+        .step {
+            padding: 8px 16px;
+            background: #eee;
+            border-radius: 16px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .step.active {
+            background: #0066cc;
+            color: white;
+        }
+        
+        /* Add analysis toggle button */
+        .toggle-analysis {
+            background: none;
+            border: none;
+            color: #0066cc;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 4px;
+            font-size: 0.9em;
+            width: auto;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -183,18 +224,23 @@
         </div>
 
         <div class="steps-indicator">
-            <div class="step" id="step1">1. Transform Text</div>
-            <div class="step" id="step2">2. Generate Image</div>
+            <div class="step" id="step1">1. Analyze Poster</div>
+            <div class="step" id="step2">2. Transform Story</div>
+            <div class="step" id="step3">3. Generate Image</div>
         </div>
-
+    
         <button onclick="generateRomanticVersion()" id="generateBtn">Generate Romantic Version</button>
         <p id="loadingText">✨ Processing...</p>
         <p id="errorText" class="error"></p>
-
+    
         <div class="preview-container">
             <div class="preview-box">
                 <h3>Original Version</h3>
                 <img id="originalPreview" style="display: none;" alt="Original poster preview">
+                <button class="toggle-analysis" onclick="toggleAnalysis()" id="toggleAnalysisBtn" style="display: none;">
+                    Show poster analysis
+                </button>
+                <div id="posterAnalysis" class="poster-analysis"></div>
                 <div id="originalDetails" class="preview-details" style="display: none;">
                     <h4 id="originalTitle"></h4>
                     <p id="originalDescription"></p>
@@ -208,11 +254,10 @@
                     <p id="romanticDescription"></p>
                 </div>
             </div>
-        </div>
+        </div>    
     </div>
 
     <script>
-        // Previous event listeners remain the same
         const posterInput = document.getElementById('posterInput');
         const originalPreview = document.getElementById('originalPreview');
         const generateBtn = document.getElementById('generateBtn');
@@ -222,7 +267,6 @@
         const originalDetails = document.getElementById('originalDetails');
         const romanticDetails = document.getElementById('romanticDetails');
 
-        // Preview handlers remain the same
         posterInput.addEventListener('change', function(e) {
             if (e.target.files && e.target.files[0]) {
                 const reader = new FileReader();
@@ -262,7 +306,62 @@
             document.getElementById(`step${step}`).classList.add('active');
         }
 
-        async function getRomanticVersion(title, description) {
+        function toggleAnalysis() {
+            const analysis = document.getElementById('posterAnalysis');
+            const btn = document.getElementById('toggleAnalysisBtn');
+            if (analysis.style.display === 'none') {
+                analysis.style.display = 'block';
+                btn.textContent = 'Hide poster analysis';
+            } else {
+                analysis.style.display = 'none';
+                btn.textContent = 'Show poster analysis';
+            }
+        }
+
+        async function analyzePoster(base64Image) {
+            const apiKey = document.getElementById('apiKey').value;
+            const endpoint = document.getElementById('endpoint').value;
+            const modelName = document.getElementById('modelName').value;
+
+            const response = await fetch(`${endpoint}/openai/deployments/${modelName}/chat/completions?api-version=2024-02-15-preview`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'api-key': apiKey
+                },
+                body: JSON.stringify({
+                    messages: [
+                        {
+                            role: "system",
+                            content: "You are a movie poster analyst. Analyze the visual elements, style, composition, and mood of movie posters. Focus on key visual elements that could be reinterpreted romantically."
+                        },
+                        {
+                            role: "user",
+                            content: [
+                                {
+                                    type: "text",
+                                    text: "Analyze this movie poster. Describe its visual elements, composition, color scheme, and mood. Focus on aspects that could be transformed for a romantic version."
+                                },
+                                {
+                                    type: "image_url",
+                                    image_url: {
+                                        url: `data:image/jpeg;base64,${base64Image}`
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 500
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message);
+            return data.choices[0].message.content;
+        }
+
+        async function getRomanticVersion(title, description, posterAnalysis) {
             const apiKey = document.getElementById('apiKey').value;
             const endpoint = document.getElementById('endpoint').value;
             const modelName = document.getElementById('modelName').value;
@@ -281,25 +380,60 @@
                         },
                         {
                             role: "user",
-                            content: `Transform this movie into a romantic version.\nOriginal Title: ${title}\nOriginal Description: ${description}\n\nProvide the response in JSON format with 'title' and 'description' fields.`
+                            content: `Transform this movie into a romantic version, considering both the original details and the poster analysis.\n\nOriginal Title: ${title}\nOriginal Description: ${description}\nPoster Analysis: ${posterAnalysis}\n\nProvide the response in JSON format with 'title' and 'description' fields.`
                         }
                     ],
                     temperature: 0.7,
-                    response_format: { "type": "json_object" }
+                    response_format:  { type: "json_object" }
                 })
             });
 
             const data = await response.json();
-            if (data.error) {
-                throw new Error(data.error.message);
-            }
-
+            if (data.error) throw new Error(data.error.message);
+            
             try {
-                const content = data.choices[0].message.content;
-                return JSON.parse(content);
+                return JSON.parse(data.choices[0].message.content);
             } catch (e) {
                 throw new Error('Failed to parse romantic version response');
             }
+        }
+
+        async function generateNewImage(posterAnalysis, romanticVersion) {
+            const apiKey = document.getElementById('apiKey').value;
+            const endpoint = document.getElementById('endpoint').value;
+
+            const prompt = `Create a movie poster for a romantic film titled "${romanticVersion.title}". 
+                          The story is: ${romanticVersion.description}
+                          
+                          Consider these elements from the original poster: ${posterAnalysis}
+                          
+                          The poster should have:
+                          - A romantic atmosphere with soft lighting and warm colors
+                          - Professional movie poster composition and typography
+                          - Subtle romantic elements like rose petals, gentle lighting effects, or dreamy atmospheres
+                          - High-quality, cinematic feel
+                          - Text should be clear and legible
+                          - Maintain some visual callbacks to the original poster's style
+                          
+                          Make it look like a professional movie poster, not a simple illustration.`;
+
+            const response = await fetch(`${endpoint}/openai/deployments/dall-e-3/images/generations?api-version=2024-02-15-preview`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'api-key': apiKey
+                },
+                body: JSON.stringify({
+                    prompt: prompt,
+                    size: '1024x1024',
+                    quality: 'standard',
+                    style: 'vivid'
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message);
+            return data.data[0].url;
         }
 
         async function generateRomanticVersion() {
@@ -331,41 +465,32 @@
             romanticDetails.style.display = 'none';
 
             try {
-                // Step 1: Get romantic version of title and description
+                // Step 1: Analyze original poster
                 updateStepIndicator(1);
-                loadingText.textContent = "✨ Transforming movie details...";
-                const romanticVersion = await getRomanticVersion(title, description);
+                loadingText.textContent = "✨ Analyzing original poster...";
+                const base64Image = await getBase64(file);
+                const posterAnalysis = await analyzePoster(base64Image);
+                
+                // Display analysis
+                document.getElementById('posterAnalysis').textContent = posterAnalysis;
+                document.getElementById('toggleAnalysisBtn').style.display = 'block';
+
+                // Step 2: Transform story
+                updateStepIndicator(2);
+                loadingText.textContent = "✨ Creating romantic version...";
+                const romanticVersion = await getRomanticVersion(title, description, posterAnalysis);
 
                 // Update romantic details
                 document.getElementById('romanticTitle').textContent = romanticVersion.title;
                 document.getElementById('romanticDescription').textContent = romanticVersion.description;
                 romanticDetails.style.display = 'block';
 
-                // Step 2: Generate romantic poster
-                updateStepIndicator(2);
-                loadingText.textContent = "✨ Creating romantic poster...";
-                const base64Image = await getBase64(file);
-                
-                const response = await fetch(`${endpoint}/openai/images/variations?api-version=2023-06-01-preview`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'api-key': apiKey
-                    },
-                    body: JSON.stringify({
-                        image: base64Image,
-                        n: 1,
-                        size: '1024x1024',
-                        prompt: `Transform this movie poster into a romantic version for the movie titled "${romanticVersion.title}" with the following plot: ${romanticVersion.description}. Add soft lighting, warm colors, and romantic elements while maintaining the core visual themes.`
-                    })
-                });
+                // Step 3: Generate new image
+                updateStepIndicator(3);
+                loadingText.textContent = "✨ Generating romantic poster...";
+                const imageUrl = await generateNewImage(posterAnalysis, romanticVersion);
 
-                const data = await response.json();
-                if (data.error) {
-                    throw new Error(data.error.message);
-                }
-
-                resultImage.src = `data:image/png;base64,${data.data[0].b64_json}`;
+                resultImage.src = imageUrl;
                 resultImage.style.display = 'block';
 
             } catch (error) {
