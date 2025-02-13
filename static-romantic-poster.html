@@ -256,6 +256,7 @@
             <div class="input-group">
                 <label for="apiKey">API Key:</label>
                 <input type="password" id="apiKey" placeholder="Enter your Azure OpenAI API key">
+                <small style="color: #dc3545;">Note: Your API key is not stored or logged anywhere.</small>
             </div>
             <div class="input-group">
                 <label for="endpoint">Endpoint:</label>
@@ -384,7 +385,7 @@
             const endpoint = document.getElementById('endpoint').value;
             const modelName = document.getElementById('modelName').value;
 
-            const response = await fetch(`${endpoint}/openai/deployments/${modelName}/chat/completions?api-version=2024-02-15-preview`, {
+            const response = await fetch(`${endpoint}/openai/deployments/${modelName}/chat/completions?api-version=2024-08-01-preview`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
