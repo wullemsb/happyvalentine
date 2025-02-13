@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romantic Movie Poster Generator</title>
+    <style>
+        /* Previous styles remain the same */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f7f7f7;
+        }
+        .container {
+            background-color: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .config-section {
+            background-color: #fff3cd;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .movie-details {
+            background-color: #e6f3ff;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        input[type="file"] {
+            padding: 8px;
+            background-color: #f8f9fa;
+        }
+        button {
+            background-color: #0066cc;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            display: block;
+        }
+        button:hover {
+            background-color: #0052a3;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .preview-container {
+            margin-top: 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        .preview-box {
+            background-color: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        .preview-box h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        img {
+            max-width: 100%;
+            border-radius: 8px;
+            display: block;
+        }
+        #loadingText {
+            display: none;
+            color: #666;
+            margin-top: 16px;
+            text-align: center;
+        }
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 16px;
+            display: none;
+        }
+        .preview-details {
+            margin-top: 12px;
+            padding: 12px;
+            background-color: white;
+            border-radius: 6px;
+        }
+        .preview-details h4 {
+            margin: 0 0 8px 0;
+            color: #333;
+        }
+        .preview-details p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .steps-indicator {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 8px;
+        }
+        .step {
+            padding: 8px 16px;
+            background: #eee;
+            border-radius: 16px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .step.active {
+            background: #0066cc;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Romantic Movie Poster Generator</h1>
+        
+        <div class="config-section">
+            <h3>Azure OpenAI Configuration</h3>
+            <div class="input-group">
+                <label for="apiKey">API Key:</label>
+                <input type="password" id="apiKey" placeholder="Enter your Azure OpenAI API key">
+            </div>
+            <div class="input-group">
+                <label for="endpoint">Endpoint:</label>
+                <input type="url" id="endpoint" placeholder="https://your-resource.openai.azure.com">
+            </div>
+            <div class="input-group">
+                <label for="modelName">GPT Model Name:</label>
+                <input type="text" id="modelName" placeholder="Your deployed model name (e.g., gpt-4o-mini)" value="gpt-4o-mini">
+            </div>
+        </div>
+
+        <div class="movie-details">
+            <h3>Movie Details</h3>
+            <div class="input-group">
+                <label for="movieTitle">Movie Title:</label>
+                <input type="text" id="movieTitle" placeholder="Enter the movie title">
+            </div>
+            <div class="input-group">
+                <label for="movieDescription">Movie Description:</label>
+                <textarea id="movieDescription" placeholder="Enter a brief description of the movie's plot and themes"></textarea>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="posterInput">Upload Original Movie Poster:</label>
+            <input type="file" id="posterInput" accept="image/*">
+        </div>
+
+        <div class="steps-indicator">
+            <div class="step" id="step1">1. Transform Text</div>
+            <div class="step" id="step2">2. Generate Image</div>
+        </div>
+
+        <button onclick="generateRomanticVersion()" id="generateBtn">Generate Romantic Version</button>
+        <p id="loadingText">✨ Processing...</p>
+        <p id="errorText" class="error"></p>
+
+        <div class="preview-container">
+            <div class="preview-box">
+                <h3>Original Version</h3>
+                <img id="originalPreview" style="display: none;" alt="Original poster preview">
+                <div id="originalDetails" class="preview-details" style="display: none;">
+                    <h4 id="originalTitle"></h4>
+                    <p id="originalDescription"></p>
+                </div>
+            </div>
+            <div class="preview-box">
+                <h3>Romantic Version</h3>
+                <img id="resultImage" style="display: none;" alt="Generated romantic poster">
+                <div id="romanticDetails" class="preview-details" style="display: none;">
+                    <h4 id="romanticTitle"></h4>
+                    <p id="romanticDescription"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Previous event listeners remain the same
+        const posterInput = document.getElementById('posterInput');
+        const originalPreview = document.getElementById('originalPreview');
+        const generateBtn = document.getElementById('generateBtn');
+        const loadingText = document.getElementById('loadingText');
+        const errorText = document.getElementById('errorText');
+        const resultImage = document.getElementById('resultImage');
+        const originalDetails = document.getElementById('originalDetails');
+        const romanticDetails = document.getElementById('romanticDetails');
+
+        // Preview handlers remain the same
+        posterInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    originalPreview.src = e.target.result;
+                    originalPreview.style.display = 'block';
+                    updateOriginalDetails();
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        document.getElementById('movieTitle').addEventListener('input', updateOriginalDetails);
+        document.getElementById('movieDescription').addEventListener('input', updateOriginalDetails);
+
+        function updateOriginalDetails() {
+            const title = document.getElementById('movieTitle').value;
+            const description = document.getElementById('movieDescription').value;
+            if (title || description) {
+                document.getElementById('originalTitle').textContent = title;
+                document.getElementById('originalDescription').textContent = description;
+                originalDetails.style.display = 'block';
+            }
+        }
+
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function updateStepIndicator(step) {
+            document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+        }
+
+        async function getRomanticVersion(title, description) {
+            const apiKey = document.getElementById('apiKey').value;
+            const endpoint = document.getElementById('endpoint').value;
+            const modelName = document.getElementById('modelName').value;
+
+            const response = await fetch(`${endpoint}/openai/deployments/${modelName}/chat/completions?api-version=2024-02-15-preview`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'api-key': apiKey
+                },
+                body: JSON.stringify({
+                    messages: [
+                        {
+                            role: "system",
+                            content: "You are a creative writer specializing in transforming movie concepts into romantic versions. Your task is to create romantic versions of movie titles and descriptions while maintaining core themes but adding romantic elements."
+                        },
+                        {
+                            role: "user",
+                            content: `Transform this movie into a romantic version.\nOriginal Title: ${title}\nOriginal Description: ${description}\n\nProvide the response in JSON format with 'title' and 'description' fields.`
+                        }
+                    ],
+                    temperature: 0.7,
+                    response_format: { "type": "json_object" }
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) {
+                throw new Error(data.error.message);
+            }
+
+            try {
+                const content = data.choices[0].message.content;
+                return JSON.parse(content);
+            } catch (e) {
+                throw new Error('Failed to parse romantic version response');
+            }
+        }
+
+        async function generateRomanticVersion() {
+            const apiKey = document.getElementById('apiKey').value;
+            const endpoint = document.getElementById('endpoint').value;
+            const title = document.getElementById('movieTitle').value;
+            const description = document.getElementById('movieDescription').value;
+            const file = posterInput.files[0];
+
+            if (!apiKey || !endpoint) {
+                alert('Please provide Azure OpenAI API key and endpoint');
+                return;
+            }
+
+            if (!title || !description) {
+                alert('Please provide both title and description');
+                return;
+            }
+
+            if (!file) {
+                alert('Please select an image first');
+                return;
+            }
+
+            generateBtn.disabled = true;
+            loadingText.style.display = 'block';
+            errorText.style.display = 'none';
+            resultImage.style.display = 'none';
+            romanticDetails.style.display = 'none';
+
+            try {
+                // Step 1: Get romantic version of title and description
+                updateStepIndicator(1);
+                loadingText.textContent = "✨ Transforming movie details...";
+                const romanticVersion = await getRomanticVersion(title, description);
+
+                // Update romantic details
+                document.getElementById('romanticTitle').textContent = romanticVersion.title;
+                document.getElementById('romanticDescription').textContent = romanticVersion.description;
+                romanticDetails.style.display = 'block';
+
+                // Step 2: Generate romantic poster
+                updateStepIndicator(2);
+                loadingText.textContent = "✨ Creating romantic poster...";
+                const base64Image = await getBase64(file);
+                
+                const response = await fetch(`${endpoint}/openai/images/variations?api-version=2023-06-01-preview`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'api-key': apiKey
+                    },
+                    body: JSON.stringify({
+                        image: base64Image,
+                        n: 1,
+                        size: '1024x1024',
+                        prompt: `Transform this movie poster into a romantic version for the movie titled "${romanticVersion.title}" with the following plot: ${romanticVersion.description}. Add soft lighting, warm colors, and romantic elements while maintaining the core visual themes.`
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+
+                resultImage.src = `data:image/png;base64,${data.data[0].b64_json}`;
+                resultImage.style.display = 'block';
+
+            } catch (error) {
+                errorText.textContent = `Error: ${error.message}`;
+                errorText.style.display = 'block';
+            } finally {
+                loadingText.style.display = 'none';
+                generateBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
